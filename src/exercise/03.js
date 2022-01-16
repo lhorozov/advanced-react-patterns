@@ -4,17 +4,12 @@
 import * as React from 'react'
 import {Switch} from '../switch'
 
-// 🐨 create your ToggleContext context here
-// 📜 https://reactjs.org/docs/context.html#reactcreatecontext
-
 const ToggleContext = React.createContext()
 
 function Toggle({children}) {
   const [on, setOn] = React.useState(false)
   const toggle = () => setOn(!on)
 
-  // 🐨 remove all this 💣 and instead return <ToggleContext.Provider> where
-  // the value is an object that has `on` and `toggle` on it.
   return (
     <ToggleContext.Provider value={{on, toggle}}>
       {children}
@@ -23,7 +18,13 @@ function Toggle({children}) {
 }
 
 function useToggle() {
-  return React.useContext(ToggleContext)
+  const context = React.useContext(ToggleContext)
+  if (!context) {
+    throw new Error(
+      'ToggleContext should be used inside ToggleContext Provider (Toggle)',
+    )
+  }
+  return context
 }
 
 function ToggleOn({children}) {
@@ -32,12 +33,12 @@ function ToggleOn({children}) {
 }
 
 function ToggleOff({children}) {
-  const {on} = React.useContext(ToggleContext)
+  const {on} = useToggle()
   return on ? null : children
 }
 
 function ToggleButton({props}) {
-  const {on, toggle} = React.useContext(ToggleContext)
+  const {on, toggle} = useToggle()
   return <Switch on={on} onClick={toggle} {...props} />
 }
 
