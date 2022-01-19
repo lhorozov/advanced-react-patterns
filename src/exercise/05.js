@@ -11,10 +11,10 @@ const callAll =
 
 function toggleReducer(state, {type, initialState}) {
   switch (type) {
-    case 'toggle': {
+    case toggleReducerTypes.TOGGLE: {
       return {on: !state.on}
     }
-    case 'reset': {
+    case toggleReducerTypes.RESET: {
       return initialState
     }
     default: {
@@ -23,13 +23,18 @@ function toggleReducer(state, {type, initialState}) {
   }
 }
 
+const toggleReducerTypes = {
+  TOGGLE: 'toggle',
+  RESET: 'reset',
+}
+
 function useToggle({initialOn = false, reducer = toggleReducer} = {}) {
   const {current: initialState} = React.useRef({on: initialOn})
   const [state, dispatch] = React.useReducer(reducer, initialState)
   const {on} = state
 
-  const toggle = () => dispatch({type: 'toggle'})
-  const reset = () => dispatch({type: 'reset', initialState})
+  const toggle = () => dispatch({type: toggleReducerTypes.TOGGLE})
+  const reset = () => dispatch({type: toggleReducerTypes.RESET, initialState})
 
   function getTogglerProps({onClick, ...props} = {}) {
     return {
@@ -55,18 +60,18 @@ function useToggle({initialOn = false, reducer = toggleReducer} = {}) {
   }
 }
 
-// export { useToggle, toggleReducer }
+// export { useToggle, toggleReducer, toggleReducerTypes }
 
 // ---
 
-// import { useToggle, toggleReducer }
+// import { useToggle, toggleReducer, toggleReducerTypes }
 
 function App() {
   const [timesClicked, setTimesClicked] = React.useState(0)
   const clickedTooMuch = timesClicked >= 4
 
   function toggleStateReducer(state, action) {
-    if (action.type === 'toggle' && timesClicked >= 4) {
+    if (action.type === toggleReducerTypes.TOGGLE && timesClicked >= 4) {
       return {on: state.on}
     }
     return toggleReducer(state, action)
