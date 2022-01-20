@@ -15,6 +15,9 @@ const actionTypes = {
   reset: 'reset',
 }
 
+const __DEV__ = process.env.NODE_ENV === 'development'
+const __PRODUCTION__ = process.env.NODE_ENV === 'production'
+
 function toggleReducer(state, {type, initialState}) {
   switch (type) {
     case actionTypes.toggle: {
@@ -89,6 +92,8 @@ function useToggle({
   }
 }
 
+function noop() {}
+
 function useControlledSwitchWarning(
   controlPropValue,
   controlPropName,
@@ -98,18 +103,27 @@ function useControlledSwitchWarning(
     controlPropValue !== null && controlPropValue !== undefined
 
   const {current: wasControlled} = React.useRef(isControlled)
+  let effect = noop
+  if (__DEV__) {
+    effect = () => {
+      warning(
+        !(wasControlled && !isControlled),
+        `\`${componentName}\` is changing from controlled to be uncontrolled. Reach UI components should not switch from uncontrolled to controlled (or vice versa). Decide between using a controlled or uncontrolled \`${componentName}\` for the lifetime of the component. Check the \`${controlPropName}\` prop.`,
+      )
+      warning(
+        !(!wasControlled && isControlled),
+        `\`${componentName}\` is changing from uncontrolled to be controlled. Reach UI components should not switch from uncontrolled to controlled (or vice versa). Decide between using a controlled or uncontrolled \`${componentName}\` for the lifetime of the component. Check the \`${controlPropName}\` prop.`,
+      )
+    }
+  }
 
-  React.useEffect(() => {
-    console.log(wasControlled, !isControlled)
-    warning(
-      !(wasControlled && !isControlled),
-      `\`${componentName}\` is changing from controlled to be uncontrolled. Reach UI components should not switch from uncontrolled to controlled (or vice versa). Decide between using a controlled or uncontrolled \`${componentName}\` for the lifetime of the component. Check the \`${controlPropName}\` prop.`,
-    )
-    warning(
-      !(!wasControlled && isControlled),
-      `\`${componentName}\` is changing from uncontrolled to be controlled. Reach UI components should not switch from uncontrolled to controlled (or vice versa). Decide between using a controlled or uncontrolled \`${componentName}\` for the lifetime of the component. Check the \`${controlPropName}\` prop.`,
-    )
-  }, [componentName, isControlled, controlPropName, wasControlled])
+  React.useEffect(effect, [
+    componentName,
+    isControlled,
+    controlPropName,
+    wasControlled,
+    effect,
+  ])
 }
 
 function Toggle({on: controlledOn, onChange, readOnly = false}) {
