@@ -52,18 +52,7 @@ function useToggle({
     )
   }, [onIsControlled, hasOnChange, readOnly])
 
-  const {current: onWasControled} = React.useRef(onIsControlled)
-
-  React.useEffect(() => {
-    warning(
-      !(onWasControled && !onIsControlled),
-      'from controlled to uncontrolled',
-    )
-    warning(
-      !(!onWasControled && onIsControlled),
-      'from uncontrolled to controlled',
-    )
-  }, [onWasControled, onIsControlled])
+  useControlledSwitchWarning(controlledOn, 'on', 'Toggle')
 
   function dispatchWithOnChange(action) {
     if (!onIsControlled) {
@@ -100,6 +89,29 @@ function useToggle({
   }
 }
 
+function useControlledSwitchWarning(
+  controlPropValue,
+  controlPropName,
+  componentName,
+) {
+  const isControlled =
+    controlPropValue !== null && controlPropValue !== undefined
+
+  const {current: wasControlled} = React.useRef(isControlled)
+
+  React.useEffect(() => {
+    console.log(wasControlled, !isControlled)
+    warning(
+      !(wasControlled && !isControlled),
+      `\`${componentName}\` is changing from controlled to be uncontrolled. Reach UI components should not switch from uncontrolled to controlled (or vice versa). Decide between using a controlled or uncontrolled \`${componentName}\` for the lifetime of the component. Check the \`${controlPropName}\` prop.`,
+    )
+    warning(
+      !(!wasControlled && isControlled),
+      `\`${componentName}\` is changing from uncontrolled to be controlled. Reach UI components should not switch from uncontrolled to controlled (or vice versa). Decide between using a controlled or uncontrolled \`${componentName}\` for the lifetime of the component. Check the \`${controlPropName}\` prop.`,
+    )
+  }, [componentName, isControlled, controlPropName, wasControlled])
+}
+
 function Toggle({on: controlledOn, onChange, readOnly = false}) {
   const {on, getTogglerProps} = useToggle({
     on: controlledOn,
@@ -111,14 +123,14 @@ function Toggle({on: controlledOn, onChange, readOnly = false}) {
 }
 
 function App() {
-  const [bothOn, setBothOn] = React.useState()
+  const [bothOn, setBothOn] = React.useState(false)
   const [timesClicked, setTimesClicked] = React.useState(0)
 
   function handleToggleChange(state, action) {
     if (action.type === actionTypes.toggle && timesClicked > 4) {
       return
     }
-    setBothOn(false)
+    setBothOn()
     setTimesClicked(c => c + 1)
   }
 
